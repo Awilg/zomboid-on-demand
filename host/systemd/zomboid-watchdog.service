@@ -1,0 +1,6 @@
+[Unit]
+Description=Zomboid watchdog: count players and stop the server when idle
+
+[Service]
+Type=oneshot
+ExecStart=/opt/zomboid/venv/bin/zomboid-host watchdog

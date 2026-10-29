@@ -1,0 +1,21 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "zomboid-server"
+version = "0.1.0"
+requires-python = ">=3.12"
+dependencies = ["boto3", "pynacl"]
+
+[project.optional-dependencies]
+dev = ["pytest", "moto[s3,ssm,ec2]"]
+
+[project.scripts]
+zomboid-host = "zomboid_host.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["host", "bot"]
+
+[tool.pytest.ini_options]
+testpaths = ["host/tests", "bot/tests"]

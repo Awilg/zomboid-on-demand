@@ -1,0 +1,14 @@
+.venv/
+build/
+*.tfstate*
+.terraform/
+terraform.tfvars
+config/secrets.env
+world-import/
+__pycache__/
+*.egg-info/
+.pytest_cache/
+
+# Private working notes: kept locally, not published.
+docs/handoff.md
+docs/superpowers/

@@ -1,0 +1,67 @@
+#!/bin/bash
+# Runs once, on the first boot. Later boots use zomboid-boot.service.
+# Failsafe. bootstrap.sh later schedules its own power-off, which replaces this one.
+shutdown -P +60
+# User data runs only once. This unit gives every later boot a failsafe power-off,
+# even if the rest of this script fails. bootstrap.sh replaces the schedule after it.
+cat > /etc/systemd/system/zomboid-failsafe.service <<'UNIT'
+[Unit]
+Description=Zomboid failsafe: power off after 500 minutes
+Before=zomboid-boot.service
+
+[Service]
+Type=oneshot
+ExecStart=/sbin/shutdown -P +500
+
+[Install]
+WantedBy=multi-user.target
+UNIT
+systemctl daemon-reload
+systemctl enable zomboid-failsafe.service
+set -euxo pipefail
+exec > >(tee -a /var/log/zomboid-user-data.log) 2>&1
+
+export DEBIAN_FRONTEND=noninteractive
+BUCKET="${bucket}"
+REGION="${region}"
+ROOT=/opt/zomboid
+
+dpkg --add-architecture i386
+add-apt-repository -y multiverse
+apt-get update
+echo "steamcmd steam/question select I AGREE" | debconf-set-selections
+echo "steamcmd steam/license note" | debconf-set-selections
+apt-get install -y python3-venv zstd lib32gcc-s1 steamcmd
+
+id zomboid >/dev/null 2>&1 || useradd --system --create-home --shell /usr/sbin/nologin zomboid
+mkdir -p $ROOT/server $ROOT/data $ROOT/state $ROOT/bundle
+chown -R zomboid:zomboid $ROOT/server $ROOT/data
+echo "BUCKET=$BUCKET" > $ROOT/state/host.env
+
+python3 -m venv $ROOT/venv
+$ROOT/venv/bin/pip install --quiet boto3
+
+# Fetch the first bundle. Later boots do this in bootstrap.sh.
+$ROOT/venv/bin/python - "$BUCKET" "$REGION" <<'PY'
+import sys
+import tarfile
+import tempfile
+
+import boto3
+
+bucket, region = sys.argv[1:]
+with tempfile.NamedTemporaryFile(suffix=".tar.gz") as archive:
+    boto3.client("s3", region_name=region).download_file(
+        bucket, "bundle/current.tar.gz", archive.name
+    )
+    with tarfile.open(archive.name, "r:gz") as tf:
+        tf.extractall("/opt/zomboid/bundle", filter="data")
+PY
+
+$ROOT/venv/bin/pip install --quiet $ROOT/bundle
+install -m 0755 $ROOT/bundle/host/bootstrap.sh $ROOT/bootstrap.sh
+cp $ROOT/bundle/host/systemd/* /etc/systemd/system/
+systemctl daemon-reload
+systemctl enable zomboid-boot.service
+# The bootstrap stage owns the failsafe and the power-off.
+systemctl start --no-block zomboid-boot.service

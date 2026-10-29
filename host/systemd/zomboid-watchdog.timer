@@ -1,0 +1,7 @@
+[Unit]
+Description=Run the Zomboid watchdog every minute
+
+[Timer]
+OnBootSec=5min
+OnUnitActiveSec=60
+Unit=zomboid-watchdog.service

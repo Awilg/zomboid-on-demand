@@ -1,0 +1,10 @@
+[Unit]
+Description=Project Zomboid dedicated server
+
+[Service]
+Type=simple
+User=zomboid
+WorkingDirectory=/opt/zomboid/server
+EnvironmentFile=/opt/zomboid/state/game.env
+ExecStart=/opt/zomboid/server/start-server.sh -servername ${SERVER_NAME} -cachedir=/opt/zomboid/data -adminpassword ${ADMIN_PASSWORD}
+Restart=no

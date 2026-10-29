@@ -1,0 +1,11 @@
+[Unit]
+Description=Zomboid boot: update, configure, and start the game
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/opt/zomboid/bootstrap.sh
+
+[Install]
+WantedBy=multi-user.target

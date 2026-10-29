@@ -1,0 +1,10 @@
+# Copy to terraform.tfvars (gitignored) and fill in the values.
+# The deploy script sets backup_bucket.
+owner_email         = "you@example.com"
+game_password       = "ChangeMe123"
+discord_public_key  = "hex public key from the Discord developer portal"
+discord_webhook_url = "https://discord.com/api/webhooks/ID/TOKEN"
+zomboid_role_id     = "123456789012345678"
+admin_role_id       = "123456789012345679"
+# instance_type = "m7i-flex.large"
+# disk_gb       = 40
